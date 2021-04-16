@@ -3,5 +3,9 @@
     <string name="enter">Entrar</string>
     <string name="signIn">Não tem uma conta? Crie aqui!</string>
     <string name="insert">Cadastrar</string>
-    <string name="photo">Foto</string>>
+    <string name="photo">Foto</string>
+    <string name="contacts">Contatos</string>
+    <string name="logout">Logout</string>
+    <string name="btn_chat">Enviar</string>
+    <string name="message">Digite a mensagem</string>>
 </resources>
