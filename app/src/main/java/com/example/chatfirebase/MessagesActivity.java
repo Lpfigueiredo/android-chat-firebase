@@ -8,18 +8,23 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.installations.FirebaseInstallations;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.squareup.picasso.Picasso;
 import com.xwray.groupie.GroupAdapter;
 import com.xwray.groupie.GroupieViewHolder;
@@ -36,6 +41,10 @@ public class MessagesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messages);
 
+        ChatApplication application = (ChatApplication) getApplication();
+
+        getApplication().registerActivityLifecycleCallbacks(application);
+
         RecyclerView rv = findViewById(R.id.recycler_contact);
         rv.setLayoutManager(new LinearLayoutManager(this));
 
@@ -43,12 +52,41 @@ public class MessagesActivity extends AppCompatActivity {
         rv.setAdapter(adapter);
 
         verifyAuthentication();
+        
+        updateToken();
 
         fetchLastMessage();
     }
 
+    private void updateToken() {
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(new OnCompleteListener<String>() {
+                    @Override
+                    public void onComplete(@NonNull Task<String> task) {
+                        if (!task.isSuccessful()) {
+                            return;
+                        }
+
+                        String token = task.getResult();
+
+                        String uid = FirebaseAuth.getInstance().getUid();
+
+                        if (uid != null) {
+                            FirebaseFirestore.getInstance().collection("users")
+                                    .document(uid)
+                                    .update("token", token);
+                        }
+                    }
+                });
+
+    }
+
     private void fetchLastMessage() {
         String uid = FirebaseAuth.getInstance().getUid();
+
+        if (uid == null) {
+            return;
+        }
 
         FirebaseFirestore.getInstance().collection("last-messages")
                 .document(uid)
